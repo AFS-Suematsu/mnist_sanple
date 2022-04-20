@@ -1,0 +1,56 @@
+# 3. 撮影した画像を用いた予測
+
+
+from keras.models import load_model
+from google.colab import files
+from PIL import Image
+
+import cv2
+import numpy as np
+from PIL import Image
+from google.colab import files
+from google.colab.patches import cv2_imshow
+
+#データの形を変数に
+image_rows = 28
+image_cols = 28
+image_color = 1 #グレースケールのこと
+input_shape = (image_rows, image_cols, image_color)
+
+# img = Image.open('photo.jpg').convert('L')
+img_r=cv2.imread('photo.jpg')
+h,w,_=img_r.shape
+
+if h>w:
+  img_1=img_r[h//2-w//2:h//2+w//2:0,w]
+else:
+  img_1=img_r[0:h,w//2-h//2:w//2+h//2]
+
+#画像を28x28に変換
+img_1 = cv2.resize(img_1,(28,28))
+img_1=cv2.cvtColor(img_1,cv2.COLOR_BGR2GRAY)
+#img.thumbnail((image_rows, image_cols))
+
+#フロート型の行列に変換
+img = np.array(img_1, dtype=np.float32)
+img = img.reshape(-1, image_rows, image_cols, image_color)
+#黒0~255白の画像データをMNISTのデータと同じ白0~1黒に変える
+img = 1 - np.array(img / 255)
+
+
+model = load_model('MNIST-model.h5')
+model.load_weights('MNIST-weights.h5')
+
+#answer = model.predict_classes(np.array(img))
+answer=np.argmax(model.predict(np.array(img)), axis=-1)
+answer_img=np.zeros((100,100,3),np.uint8)
+answer_img.fill(255)
+string=answer[0]
+img_2 = cv2.resize(img_1, (100,100))
+cv2.putText(answer_img,str(string),(10,100),cv2.FONT_HERSHEY_PLAIN,10,(0,0,0),2,cv2.LINE_AA)
+print("撮影した画像")
+cv2_imshow(img_2)
+print()
+print("予測結果画像")
+cv2_imshow(answer_img)
+print("コンピューターは \"", answer[0], "\"と予測しました!")
