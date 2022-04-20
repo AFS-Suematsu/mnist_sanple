@@ -94,3 +94,11 @@ print('正解率...', score[1], 'loss=', score[0])
 model.save('MNIST-model.h5')
 
 model.save_weights('MNIST-weights.h5')
+
+
+# 学習結果の表示
+# accuracy（精度）：　どれくらい予測と実際の値が合っているか。値が高いほど良い。
+# loss（損失関数)どれくらい正解とずれているか。　値が低いほど良い。
+plot_history(history)
+
+
