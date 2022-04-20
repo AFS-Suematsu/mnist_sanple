@@ -1,0 +1,96 @@
+# １. データの読み込みとモデルの構築、学習
+
+
+import tensorflow as tf
+from keras.datasets import mnist
+from tensorflow.keras.utils import to_categorical
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten, Conv2D, MaxPooling2D
+import matplotlib.pyplot as plt
+
+#データセットのロード(トレーニング用とテスト用で分かれている)
+(X_train, Y_train), (X_test,Y_test) = mnist.load_data()
+
+#データの形を変数に
+image_rows = 28
+image_cols = 28
+image_color = 1 #グレースケールのこと
+input_shape = (image_rows, image_cols, image_color)
+out_size = 10
+
+#データ整形
+X_train = X_train.reshape(-1, image_rows, image_cols, image_color) / 255
+X_test = X_test.reshape(-1, image_rows, image_cols, image_color) / 255
+
+Y_train = to_categorical(Y_train,out_size)
+Y_test = to_categorical(Y_test,out_size)
+
+#モデル構築
+model = Sequential()
+model.add(Conv2D(32, (3, 3), input_shape=input_shape))
+model.add(Activation('relu'))
+model.add(Conv2D(32, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(Conv2D(64, (3, 3)))
+model.add(Activation('relu'))
+model.add(MaxPooling2D(pool_size=(2, 2)))
+model.add(Dropout(0.25))
+
+model.add(Flatten())
+model.add(Dense(512))
+model.add(Activation('relu'))
+model.add(Dropout(0.5))
+model.add(Dense(out_size)) 
+model.add(Activation('softmax'))
+
+def plot_history(history):
+    # 精度の履歴をプロット
+    plt.plot(history.history['accuracy'],"o-",label="acc")
+    plt.plot(history.history['val_accuracy'],"o-",label="val_acc")
+    plt.title('model accuracy')
+    plt.xlabel('epoch')
+    plt.ylabel('accuracy')
+    plt.legend(loc="lower right")
+    plt.show()
+ 
+    # 損失の履歴をプロット
+    plt.plot(history.history['loss'],"o-",label="loss",)
+    plt.plot(history.history['val_loss'],"o-",label="val_loss")
+    plt.title('model loss')
+    plt.xlabel('epoch')
+    plt.ylabel('loss')
+    plt.legend(loc='lower right')
+    plt.show()
+    
+# def というのは関数を定義することです。
+# 今回は、精度や損失の履歴をグラフ表示する関数を作っておきます。
+
+
+
+#コンパイル
+model.compile(
+    loss='categorical_crossentropy',
+    optimizer='adam',
+    metrics=['accuracy']
+)
+
+#10
+history = model.fit(
+  X_train, Y_train,
+  batch_size=128, epochs=1,verbose=1,
+  validation_data=(X_test, Y_test)
+)
+
+#テスト
+score = model.evaluate(X_test, Y_test, verbose=1)
+print('正解率...', score[1], 'loss=', score[0])
+
+#保存
+model.save('MNIST-model.h5')
+
+model.save_weights('MNIST-weights.h5')
